@@ -1,7 +1,6 @@
 /*!
- * Checks the status of all DirectoryService nodes, and exits with a non-zero
- * status if any are inaccessible. This is a command-line analog of the
- * "Network Accounts Available" view at the login window.
+ * dsstatus.m
+ * dsstatus
  *
  * Copyright (c) 2010 Ben Gollmer.
  *
