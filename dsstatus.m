@@ -26,15 +26,17 @@
 #define vlog(format, ...) if(verbose) { fprintf(stderr, "%s\n", \
             [[NSString stringWithFormat:format, ##__VA_ARGS__] UTF8String]); }
 
+/* Wait this long for SystemConfiguration to report that network services
+ * are configured
+ */
+#define kMaxNetworkWait 30
+
 /*!
  * Waits for all network services to become available.
  * 
  * This is the moral equivalent of `ipconfig waitall`; it's probably only
  * useful if you are running dsstatus immediately upon system boot, but can
  * prevent spurious DirectoryService failures in that case.
- *
- * N.B. no timeouts are currently implemented; this function will hang forever
- * if SystemConfiguration never reports all network services as configured.
  */
 static void waitall()
 {
@@ -49,10 +51,16 @@ static void waitall()
   if(session == NULL) return;
   
   /* Cheeseball hack to avoid setting up a CFRunLoop() for this simple task */
+  uint32_t wait = 0;
   while(plist == NULL)
   {
     plist = SCDynamicStoreCopyValue(session, CFSTR("Plugin:IPConfiguration"));
-    if(plist == NULL) sleep(1);
+    if(plist == NULL)
+    {
+      /* Give up if we've waited too long */
+      if(wait++ >= kMaxNetworkWait) return;
+      sleep(1);
+    }
   }
   
   CFRelease(plist);
